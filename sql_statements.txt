@@ -1,0 +1,22 @@
+1.
+select sname, max(age)
+From student
+Group by name
+Having max(age)
+
+2. 
+Select F.sname
+From Faculty F
+Where F.fid NOT IN (Select Fid from Class)
+
+3.
+Select S.sname, S.sid
+From Student S
+
+4.
+Select C.cname, count(s)
+From Enrollment E INNER JOIN Class C on C.cid = E.cid
+Group by C.name
+Having count(s) >= (select count(s))
+From Enrollment E INNER JOIN
+Group by E.cname
