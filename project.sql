@@ -1,0 +1,139 @@
+--A
+CREATE FUNCTION female_faculty(@Gender VARCHAR(10))
+
+RETURNS float
+
+AS
+
+BEGIN
+
+DECLARE @TOTALCOUNT FLOAT
+
+DECLARE @GenderCOUNT FLOAT
+
+DECLARE @PERCENTAGE FLOAT
+
+SELECT @TOTALCOUNT=Count(*) FROM Professor
+
+SELECT @GenderCOUNT=Count(*) FROM Professor WHERE Gender=@Gender
+
+SET @PERCENTAGE =(@GenderCOUNT/@TOTALCOUNT)*100
+
+RETURN @PERCENTAGE
+
+END
+
+GO
+
+
+--B
+CREATE FUNCTION total_people(@PNo INT)
+
+RETURNS INT
+
+AS
+
+BEGIN
+
+DECLARE @TOTALCOUNT INT
+
+DECLARE @STUDENTSCOUNT INT
+
+DECLARE @PICOUNT INT
+
+DECLARE @COPICOUNT INT
+
+SELECT @STUDENTSCOUNT=COUNT(*) FROM ProjectResearchAssistants WHERE ProjectId=@PNo
+
+SELECT @PICOUNT=COUNT(ProjectPI) FROM Projects WHERE ProjectNumber=@PNo AND ProjectPI IS NOT NULL
+
+SELECT @COPICOUNT=COUNT(ProfessorId) FROM ProjectCoPIs WHERE ProjectNumber=@PNo AND ProfessorId IS NOT NULL
+
+SELECT @TOTALCOUNT=@STUDENTSCOUNT+ @PICOUNT+@COPICOUNT
+
+RETURN @TOTALCOUNT
+
+END
+
+GO
+
+
+--C
+CREATE TRIGGER faculty_restrict
+
+ON [ProjectCoPIs]
+
+INSTEAD OF INSERT
+
+AS
+
+BEGIN
+
+SET NOCOUNT ON;
+
+DECLARE @COPISCOUNT INT
+
+DECLARE @PROJID INT
+
+SELECT @PROJID=inserted.ProjectNumber
+
+FROM inserted
+
+SELECT @COPISCOUNT=COUNT(ProfessorId)
+
+FROM ProjectCoPIs
+
+WHERE ProjectNumber=@PROJID
+
+IF @COPISCOUNT>4
+
+BEGIN
+
+RAISERROR('Number of Co PIs cannot be more than 4',16 ,1)
+
+ROLLBACK 
+
+END
+
+END
+
+
+--D
+CREATE TRIGGER student_restrict
+
+ON [dbo.ProjectResaerchAssistants]
+
+INSTEAD OF INSERT
+
+AS
+
+BEGIN
+
+SET NOCOUNT ON;
+
+DECLARE @ProjectCount INT
+
+DECLARE @STUDENTID INT
+
+SELECT @STUDENTID=inserted.StudentId
+
+FROM inserted
+
+SELECT @ProjectCount=COUNT(ProjectNumber)
+
+FROM ProjectResaerchAssistants
+
+WHERE StudentId=@STUDENTID
+
+IF @ProjectCount>2
+
+BEGIN
+
+RAISERROR('Student cannot be assigned to more than 2 projects',16 ,1)
+
+ROLLBACK 
+
+END
+
+END
+
